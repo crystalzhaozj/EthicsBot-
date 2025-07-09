@@ -6,7 +6,7 @@ SIMILARITY measures
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-# Converting documents into texts
+# Converting documents into texts (big for loop)
 
 
 # Calculating similarity
