@@ -1,7 +1,13 @@
 
+# 1. NLTK setup
+import nltk
+import os
+nltk.download('punkt', download_dir=os.path.expanduser('~/nltk_data'))
+nltk.data.path.append(os.path.expanduser('~/nltk_data'))
+
+# 2. PDF processing (your existing code)
 from pypdf import PdfReader
 import re
-import nltk
 import lmstudio as lms
 
 # 1. Extract text from pdf 
@@ -25,30 +31,34 @@ def clean_text(text):
 cleaned_text = clean_text(pdf_text)
 
 # 3. Split text into context-sized chunks 
-nltk.download("punkt")  # downloads the punkt tokenizer models for the Natural Language Toolkit (NLTK) library 
-
 def split_sentences(text, chunk_size=4096):
-    sentences = nltk.sent_tokenize(text)
+    try:
+        sentences = nltk.sent_tokenize(text)
+    except LookupError:
+        raise Exception("NLTK punkt not found. Run: nltk.download('punkt')")
+    
     chunks = []
     current_chunk = ""
     for sentence in sentences:
-        if len(current_chunk) + len(sentence) < chunk_size: # if adding the next sentence would keep chunk after size limit 
+        if len(current_chunk) + len(sentence) < chunk_size:
             current_chunk += sentence + " "
         else:
             chunks.append(current_chunk.strip())
             current_chunk = sentence + " "
-    if current_chunk:
-        chunks.append(current_chunk.strip())
-    return chunks
+    return chunks + [current_chunk.strip()] if current_chunk else chunks
 
-chunks = split_sentences(cleaned_text, chunk_size=4096)
+# 4. Process PDF
+pdf_text = clean_text(pdf_to_text("CredBot.pdf"))
+chunks = split_sentences(pdf_text)
 
-# 4. Feed chunks to lmstudio 
+# 5. Initialize responses list
+responses = []
 
-model = 'qwen/qwen3-14b'
+model = lms.llm('qwen/qwen3-14b')
 
 # Process chunks sequentially
 context = ""
+responses = []
 for i, chunk in enumerate(chunks):
     prompt = f"""
     [System: Purpose 
@@ -110,12 +120,11 @@ for i, chunk in enumerate(chunks):
     Summarize key points so far and retain full context for the next part.
     """
     response = model(prompt)
-    responses = ''
     responses.append(response)
     context += response + "\n"  # Accumulate context
     print(f"Processed chunk {i+1}. Response: {response[:100]}...")
 
 # 5. Reconstruct final output
 final_report = "\n".join(responses)  # From API or manual input
-with open("paper_summary.txt", "w") as f:
+with open("ethical_analysis.txt", "w") as f:
     f.write(final_report)
