@@ -5,12 +5,12 @@ import os
 nltk.download('punkt', download_dir=os.path.expanduser('~/nltk_data'))
 nltk.data.path.append(os.path.expanduser('~/nltk_data'))
 
-# 2. PDF processing (your existing code)
+# 2. PDF processing and importing LM Studio
 from pypdf import PdfReader
 import re
 import lmstudio as lms
 
-# 1. Extract text from pdf 
+# 3. Extract text from pdf 
 def pdf_to_text(pdf_path):
     reader = PdfReader(pdf_path)
     text = ""
@@ -20,7 +20,7 @@ def pdf_to_text(pdf_path):
 
 pdf_text = pdf_to_text("CredBot.pdf")
 
-# 2. Preprocess text 
+# 4. Preprocess text 
 def clean_text(text):
     # Merge hyphenated words
     text = re.sub(r"(\w+)-\n(\w+)", r"\1\2", text)
@@ -30,7 +30,7 @@ def clean_text(text):
 
 cleaned_text = clean_text(pdf_text)
 
-# 3. Split text into context-sized chunks 
+# 5. Split text into context-sized chunks 
 def split_sentences(text, chunk_size=4096):
     try:
         sentences = nltk.sent_tokenize(text)
@@ -47,16 +47,16 @@ def split_sentences(text, chunk_size=4096):
             current_chunk = sentence + " "
     return chunks + [current_chunk.strip()] if current_chunk else chunks
 
-# 4. Process PDF
+# 6. Process PDF
 pdf_text = clean_text(pdf_to_text("CredBot.pdf"))
 chunks = split_sentences(pdf_text)
 
-# 5. Initialize responses list
+# 7. Initialize responses list and model
 responses = []
 
 model = lms.llm('qwen/qwen3-14b')
 
-# Process chunks sequentially
+# 8. Process chunks sequentially
 context = ""
 responses = []
 for i, chunk in enumerate(chunks):
@@ -124,7 +124,7 @@ for i, chunk in enumerate(chunks):
     context += response + "\n"  # Accumulate context
     print(f"Processed chunk {i+1}. Response: {response[:100]}...")
 
-# 5. Reconstruct final output
+# 9. Reconstruct final output
 final_report = "\n".join(responses)  # From API or manual input
 with open("ethical_analysis.txt", "w") as f:
     f.write(final_report)
