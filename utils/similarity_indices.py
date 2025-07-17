@@ -20,7 +20,7 @@ def jaccard_similarity(set1, set2):
 
 """
 Cosine Similarity
-"""
+
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
@@ -32,9 +32,7 @@ def cosine_similarity(txt1, txt2):
     similarity = cosine_similarity(tfidf_matrix[0], tfidf_matrix[1])[0][0]
     return similarity
 
-"""
 RARE WORD DENSITY
-"""
 
 # Word frequency
 from wordfreq import zipf_frequency  # Lower zipf = rarer word
@@ -58,10 +56,10 @@ def entity_jaccard(text1, text2):
     intersection = len(ents1 & ents2)
     union = len(ents1 | ents2)
     return intersection / union
-
+"""
 # 2. Calculating similarities
 
-def group_similarities(group_path, similarity_function):
+def calculate_similarities(group_path, similarity_function):
     """
     Reads all text files in a given group directory, preprocesses them,
     calculates pairwise similarities, and returns a similarity matrix
