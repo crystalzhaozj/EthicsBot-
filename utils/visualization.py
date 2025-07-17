@@ -1,15 +1,18 @@
 import plotly as pl
+import plotly.graph_objects as go
+
 
 def create_heatmap(similarity_matrix, labels, title):
     """
     Generates and displays a heatmap using Plotly.
+    Labels is a list of labels.
     """
     fig = go.Figure(data=go.Heatmap(
         z=similarity_matrix,
         x=labels,
         y=labels,
         colorscale='Viridis', # Choose a color scale
-        colorbar=dict(title='Jaccard Similarity'),
+        colorbar=dict(title='Similarity'),
         hoverongaps=False
     ))
 

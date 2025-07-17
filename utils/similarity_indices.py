@@ -30,7 +30,7 @@ def cosine_similarity(txt1, txt2):
     vectorizer = TfidfVectorizer()
     tfidf_matrix = vectorizer.fit_transform(texts)
     similarity = cosine_similarity(tfidf_matrix[0], tfidf_matrix[1])[0][0]
-
+    return similarity
 
 """
 RARE WORD DENSITY
@@ -63,9 +63,11 @@ def entity_jaccard(text1, text2):
 
 def group_similarities(group_path, similarity_function):
     """
-    Reads all text files in a given group directory (4 reports for 1 paper), preprocesses them,
-    calculates pairwise Jaccard similarities, and returns a similarity matrix
+    Reads all text files in a given group directory, preprocesses them,
+    calculates pairwise similarities, and returns a similarity matrix
     along with file labels.
+    For Jaccard: 1 group directory resembles 1 paper with 4 reports
+    For Cosine:
     """
     file_contents = {}
     file_labels = []
