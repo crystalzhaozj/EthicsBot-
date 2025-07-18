@@ -1,12 +1,13 @@
+from utils import processing_txt as pr
+import numpy as np
+
 # 1. Similarity Functions
 """
 Jaccard Similarity
 """
-import os
-import processing_txt as pr
-import numpy as np
 
-def jaccard_similarity(set1, set2):
+
+def jaccard_s(set1, set2):
     """
     Calculates the Jaccard similarity between two sets.
     Jaccard Similarity = |Intersection(set1, set2)| / |Union(set1, set2)|
@@ -20,18 +21,38 @@ def jaccard_similarity(set1, set2):
 
 """
 Cosine Similarity
+"""
 
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
+def cosine_s(v1, v2):
+    """
+    Takes in 2 vectors, calculates the cosine similarity between the two vectors.
+    Returns a float number that is the similarity score.
+    """
+    # Convert to numpy arrays
+    v1 = np.array(v1)
+    v2 = np.array(v2)
 
-# Calculating similarity
-def cosine_similarity(txt1, txt2):
-    texts = [txt1, txt2]
-    vectorizer = TfidfVectorizer()
-    tfidf_matrix = vectorizer.fit_transform(texts)
-    similarity = cosine_similarity(tfidf_matrix[0], tfidf_matrix[1])[0][0]
-    return similarity
+    dot_product = np.dot(v1, v2)
 
+    # compute length of vector
+    norm_v1 = np.linalg.norm(v1)
+    norm_v2 = np.linalg.norm(v2)
+
+    if norm_v1 == 0 or norm_v2 == 0:
+        return 0.0 # Return 0 if one or both vectors are zero vectors
+    return dot_product / (norm_v1 * norm_v2)
+
+def centroid(vlist):
+    """
+    Takes in a list of numpy vectors and creates a centered, averaged vector.
+    Returns a numpy.array.
+    """
+    if not vlist:
+        return np.array([]) # Return empty array if no vectors
+    # Stack vectors vertically and then compute the mean along the first axis (rows)
+    return np.mean(vlist, axis=0) # elemnt by element 
+
+"""
 RARE WORD DENSITY
 
 # Word frequency
@@ -59,7 +80,7 @@ def entity_jaccard(text1, text2):
 """
 # 2. Calculating similarities
 
-def calculate_similarities(group_path, similarity_function):
+def pairwise_similarities(dir, similarity_function):
     """
     Reads all text files in a given group directory, preprocesses them,
     calculates pairwise similarities, and returns a similarity matrix
@@ -67,32 +88,33 @@ def calculate_similarities(group_path, similarity_function):
     For Jaccard: 1 group directory resembles 1 paper with 4 reports
     For Cosine:
     """
-    file_contents = {}
-    file_labels = []
 
-    # Read and preprocess files
-    for filename in sorted(os.listdir(group_path)): # Sort for consistent order
-        if filename.endswith(".txt"):
-            filepath = os.path.join(group_path, filename)
-            with open(filepath, "r") as f:
-                content = f.read()
-            file_contents[filename] = pr.preprocess_report(content)
-            file_labels.append(filename)
-
-    num_files = len(file_labels) # There should be 4
+    strlist, labels = pr.file_to_string(dir)
+    num_files = len(labels) # There should be 4
     similarity_matrix = np.zeros((num_files, num_files)) # creates a square matrix of size num_files * num_files, all filled with zeroes now
 
     # Calculate pairwise similarities
-    for i, file1 in enumerate(file_labels):
-        for j, file2 in enumerate(file_labels):
+    for i, file1 in enumerate(labels):
+        for j, file2 in enumerate(labels):
             if i == j:
                 similarity_matrix[i, j] = 1.0 # A file is perfectly similar to itself
             elif i < j: # Calculate only once for each pair (matrix is symmetric)
-                set1 = file_contents[file1]
-                set2 = file_contents[file2]
-                similarity = similarity_function(set1, set2)
+                t1 = strlist[file1]
+                t2 = strlist[file2]
+                if similarity_function == jaccard_s: # convert to sets for jaccard
+                    set1 = set(t1.split())
+                    set2 = set(t2.split())
+                    similarity = similarity_function(set1, set2)
+                else:
+                    similarity = similarity_function(t1, t2)
                 similarity_matrix[i, j] = similarity
                 similarity_matrix[j, i] = similarity # Fill the symmetric part
 
-    return similarity_matrix, file_labels
+    return similarity_matrix, labels
 
+def group_similarities(vecs1, vecs2):
+    c1 = centroid(vecs1)
+    c2 = centroid(vecs2)
+    similarity = cosine_s(c1, c2)
+    return similarity
+                       
